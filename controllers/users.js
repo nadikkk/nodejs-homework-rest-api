@@ -50,9 +50,23 @@ const currentUser = async (req, res) => {
   res.status(200).json({ email, subscription });
 };
 
+const updateSubscription = async (req, res, next) => {
+	const {_id} = req.user;
+	const {subscription} = req.body;
+	if (!subscription) {
+	  throw HttpError(400, "Missing field subscription");
+	}
+	await User.findByIdAndUpdate(_id, {subscription}, {
+	  new: true,
+	});
+
+	res.status(200).json({subscription});
+ };
+
 module.exports = {
   register: ctrlWrapper(register),
   loginIn: ctrlWrapper(loginIn),
   logout: ctrlWrapper(logout),
   currentUser: ctrlWrapper(currentUser),
+  updateSubscription: ctrlWrapper(updateSubscription),
 };
