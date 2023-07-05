@@ -1,5 +1,8 @@
 const { Schema, model } = require("mongoose");
+const Joi = require("joi");
 const { handleMongooseError } = require("../helpers");
+
+const { EMAIL_REGEX } = require("../constants");
 
 const contactSchema = new Schema(
   {
@@ -10,7 +13,7 @@ const contactSchema = new Schema(
     email: {
       type: String,
       unique: [true, "Duplicated email"],
-      match: /^([a-z0-9_-]+)@([\da-z-]+?)\.([a-z]{2,6})$/,
+      match: EMAIL_REGEX,
       required: true,
     },
     phone: {
@@ -22,6 +25,11 @@ const contactSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    owner: {
+      type: Schema.Types.ObjectId,
+      ref: "user",
+		required: true,
+    },
   },
   { versionKey: false, timestamps: true }
 );
@@ -30,4 +38,23 @@ contactSchema.post("save", handleMongooseError);
 
 const Contact = model("contact", contactSchema);
 
-module.exports = Contact;
+const addJoiSchema = Joi.object({
+  name: Joi.string().min(3).max(30).required(),
+
+  email: Joi.string()
+    .email({ minDomainSegments: 2, tlds: { allow: false } })
+    .required(),
+
+  phone: Joi.string().min(10).max(15).required(),
+  favorite: Joi.boolean(),
+});
+
+const updateFavoriteJoiSchema = Joi.object({
+  favorite: Joi.boolean(),
+});
+
+module.exports = {
+  Contact,
+  addJoiSchema,
+  updateFavoriteJoiSchema,
+};
